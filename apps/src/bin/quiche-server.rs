@@ -367,6 +367,14 @@ fn main() {
                     }
                 }
 
+                for p in &conn_args.plugins {
+                    if conn.insert_plugin(p) {
+                        info!("Successfully inserted {p:?}");
+                    } else {
+                        warn!("Failed to insert {p:?}");
+                    }
+                }
+
                 let client_id = next_client_id;
 
                 let client = Client {

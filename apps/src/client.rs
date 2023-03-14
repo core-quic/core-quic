@@ -205,6 +205,14 @@ pub fn connect(
         }
     }
 
+    for p in &conn_args.plugins {
+        if conn.insert_plugin(p) {
+            info!("Successfully inserted {p:?}");
+        } else {
+            warn!("Failed to insert {p:?}");
+        }
+    }
+
     info!(
         "connecting to {:} from {:} with scid {:?}",
         peer_addr,

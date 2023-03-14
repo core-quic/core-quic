@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 use std::ops::Deref;
 use std::ops::DerefMut;
+use std::path::PathBuf;
 
 use pluginop::api::ToPluginizableConnection;
 use pluginop::PluginizableConnection;
@@ -46,7 +47,13 @@ impl Connection {
 
         let pc_ptr = &mut *pc as *mut _;
         pc.get_conn_mut().set_pluginizable_connection(pc_ptr);
+        pc.get_ph_mut().set_pluginizable_connection(pc_ptr);
         Connection(pc)
+    }
+
+    /// Insert a plugin.
+    pub fn insert_plugin(&mut self, plugin_fname: &PathBuf) -> bool {
+        self.0.ph.insert_plugin(plugin_fname)
     }
 }
 
