@@ -206,7 +206,7 @@ pub fn connect(
     }
 
     for p in &conn_args.plugins {
-        if conn.insert_plugin(p) {
+        if conn.insert_plugin(p).is_ok() {
             info!("Successfully inserted {p:?}");
         } else {
             warn!("Failed to insert {p:?}");
