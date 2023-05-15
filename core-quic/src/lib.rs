@@ -71,6 +71,31 @@ impl DerefMut for Connection {
     }
 }
 
+// Overriden methods.
+impl Connection {
+    pub fn timeout(&self) -> Option<std::time::Duration> {
+        let earliest_plugin_timeout = self.0.ph.timeout().map(|timeout| {
+            let now = std::time::Instant::now();
+
+            if timeout <= now {
+                std::time::Duration::ZERO
+            } else {
+                timeout.duration_since(now)
+            }
+        });
+        let timers = [earliest_plugin_timeout, self.0.conn.timeout()];
+
+        timers.iter().filter_map(|&x| x).min()
+    }
+
+    pub fn on_timeout(&mut self) -> Result<()> {
+        let now = std::time::Instant::now();
+        self.0.ph.on_timeout(now).map_err(|_| Error::InvalidState)?;
+        self.0.conn.on_timeout();
+        Ok(())
+    }
+}
+
 // Reexport quiche structures, such as a quiche-enabled application can use
 // Core QUIC with minimal changes.
 pub use core_quiche::h3;

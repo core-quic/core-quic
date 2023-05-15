@@ -190,7 +190,7 @@ fn main() {
             if events.is_empty() && !continue_write {
                 trace!("timed out");
 
-                clients.values_mut().for_each(|c| c.conn.on_timeout());
+                clients.values_mut().for_each(|c| { c.conn.on_timeout().ok(); });
 
                 break 'read;
             }

@@ -256,7 +256,7 @@ pub fn connect(
         if events.is_empty() {
             trace!("timed out");
 
-            conn.on_timeout();
+            conn.on_timeout().unwrap();
         }
 
         // Read incoming UDP packets from the socket and feed them to quiche,
