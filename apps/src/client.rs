@@ -237,6 +237,8 @@ pub fn connect(
 
     trace!("written {}", write);
 
+    let mut probe_path = args.probe_path.clone();
+
     let app_data_start = std::time::Instant::now();
 
     let mut pkt_count = 0;
@@ -503,6 +505,12 @@ pub fn connect(
             conn.probe_path(additional_local_addr, peer_addr).unwrap();
 
             new_path_probed = true;
+        }
+
+        if !probe_path.is_empty() &&
+           *probe_path.first().unwrap() <= app_data_start.elapsed() {
+            conn.poctl(1, &[]).expect("probe-path plugin must be loaded");
+            probe_path.remove(0);
         }
 
         // Generate outgoing QUIC packets and send them on the UDP socket, until

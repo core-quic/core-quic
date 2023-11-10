@@ -55,6 +55,11 @@ impl Connection {
     pub fn insert_plugin(&mut self, plugin_fname: &PathBuf) -> Result<()> {
         self.0.ph.insert_plugin(plugin_fname).map_err(|_| Error::InvalidState)
     }
+
+    /// Plugin operation control.
+    pub fn poctl(&mut self, id: u64, params: &[PluginVal]) -> Result<Vec<PluginVal>> {
+        self.0.ph.poctl(id, params).map_err(|_| Error::InvalidState)
+    }
 }
 
 impl Deref for Connection {
@@ -115,3 +120,4 @@ pub use core_quiche::Shutdown;
 pub use core_quiche::Type;
 pub use core_quiche::MAX_CONN_ID_LEN;
 pub use core_quiche::PROTOCOL_VERSION;
+use pluginop::common::PluginVal;

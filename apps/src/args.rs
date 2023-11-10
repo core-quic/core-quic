@@ -24,7 +24,7 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Duration};
 
 use super::common::alpns;
 
@@ -290,6 +290,7 @@ Options:
   --session-file PATH      File used to cache a TLS session for resumption.
   --plugin PATH ...        Path to the WASM plugin to insert.
   --source-port PORT       Source port to use when connecting to the server [default: 0].
+  --probe-path TIME ...    If we want to probe the path using a plugin, after specified time in ms.
   -h --help                Show this screen.
 ";
 
@@ -309,6 +310,7 @@ pub struct ClientArgs {
     pub source_port: u16,
     pub perform_migration: bool,
     pub send_priority_update: bool,
+    pub probe_path: Vec<Duration>,
 }
 
 impl Args for ClientArgs {
@@ -379,6 +381,12 @@ impl Args for ClientArgs {
 
         let send_priority_update = args.get_bool("--send-priority-update");
 
+        let probe_path = args
+            .get_vec("--probe-path")
+            .into_iter()
+            .filter_map(|t| t.parse::<u64>().ok().map(Duration::from_millis))
+            .collect();
+
         ClientArgs {
             version,
             dump_response_path,
@@ -394,6 +402,7 @@ impl Args for ClientArgs {
             source_port,
             perform_migration,
             send_priority_update,
+            probe_path,
         }
     }
 }
@@ -415,6 +424,7 @@ impl Default for ClientArgs {
             source_port: 0,
             perform_migration: false,
             send_priority_update: false,
+            probe_path: vec![],
         }
     }
 }
