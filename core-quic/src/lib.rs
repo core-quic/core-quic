@@ -53,7 +53,10 @@ impl Connection {
 
     /// Insert a plugin.
     pub fn insert_plugin(&mut self, plugin_fname: &PathBuf) -> Result<()> {
-        self.0.ph.insert_plugin(plugin_fname).map_err(|_| Error::InvalidState)
+        self.0
+            .ph
+            .insert_plugin(plugin_fname)
+            .map_err(|_| Error::InvalidState)
     }
 
     /// Plugin operation control.

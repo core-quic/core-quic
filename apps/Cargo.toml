@@ -29,7 +29,6 @@ log = "0.4"
 ring = "0.16"
 core-quic = { path = "../core-quic" }
 libc = "0.2"
-nix = "0"
-
+nix = { version = "0.27", features = ["net", "socket", "uio"] }
 [lib]
 crate-type = ["lib"]

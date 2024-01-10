@@ -47,14 +47,14 @@ pub enum ClientError {
 }
 
 pub fn connect(
-    args: ClientArgs, conn_args: CommonArgs,
+    args: ClientArgs,
+    conn_args: CommonArgs,
     output_sink: impl FnMut(String) + 'static,
 ) -> Result<(), ClientError> {
     let mut buf = [0; 65535];
     let mut out = [0; MAX_DATAGRAM_SIZE];
 
-    let output_sink =
-        Rc::new(RefCell::new(output_sink)) as Rc<RefCell<dyn FnMut(_)>>;
+    let output_sink = Rc::new(RefCell::new(output_sink)) as Rc<RefCell<dyn FnMut(_)>>;
 
     // Setup the event loop.
     let mut poll = mio::Poll::new().unwrap();
@@ -80,15 +80,13 @@ pub fn connect(
 
     // Create the UDP socket backing the QUIC connection, and register it with
     // the event loop.
-    let mut socket =
-        mio::net::UdpSocket::bind(bind_addr.parse().unwrap()).unwrap();
+    let mut socket = mio::net::UdpSocket::bind(bind_addr.parse().unwrap()).unwrap();
     poll.registry()
         .register(&mut socket, mio::Token(0), mio::Interest::READABLE)
         .unwrap();
 
     let migrate_socket = if args.perform_migration {
-        let mut socket =
-            mio::net::UdpSocket::bind(bind_addr.parse().unwrap()).unwrap();
+        let mut socket = mio::net::UdpSocket::bind(bind_addr.parse().unwrap()).unwrap();
         poll.registry()
             .register(&mut socket, mio::Token(1), mio::Interest::READABLE)
             .unwrap();
@@ -288,7 +286,7 @@ pub fn connect(
                         return Err(ClientError::Other(format!(
                             "{local_addr}: recv() failed: {e:?}"
                         )));
-                    },
+                    }
                 };
 
                 trace!("{}: got {} bytes", local_addr, len);
@@ -316,7 +314,7 @@ pub fn connect(
                     Err(e) => {
                         error!("{}: recv failed: {:?}", local_addr, e);
                         continue 'read;
-                    },
+                    }
                 };
 
                 trace!("{}: processed {} bytes", local_addr, read);
@@ -333,10 +331,7 @@ pub fn connect(
             );
 
             if !conn.is_established() {
-                error!(
-                    "connection timed out after {:?}",
-                    app_data_start.elapsed(),
-                );
+                error!("connection timed out after {:?}", app_data_start.elapsed(),);
 
                 return Err(ClientError::HandshakeFail);
             }
@@ -362,9 +357,9 @@ pub fn connect(
 
         // Create a new application protocol session once the QUIC connection is
         // established.
-        if (conn.is_established() || conn.is_in_early_data()) &&
-            (!args.perform_migration || migrated) &&
-            !app_proto_selected
+        if (conn.is_established() || conn.is_in_early_data())
+            && (!args.perform_migration || migrated)
+            && !app_proto_selected
         {
             // At this stage the ALPN negotiation succeeded and selected a
             // single application protocol name. We'll use this to construct
@@ -442,38 +437,28 @@ pub fn connect(
                 core_quic::PathEvent::New(..) => unreachable!(),
 
                 core_quic::PathEvent::Validated(local_addr, peer_addr) => {
-                    info!(
-                        "Path ({}, {}) is now validated",
-                        local_addr, peer_addr
-                    );
+                    info!("Path ({}, {}) is now validated", local_addr, peer_addr);
                     conn.migrate(local_addr, peer_addr).unwrap();
                     migrated = true;
-                },
+                }
 
                 core_quic::PathEvent::FailedValidation(local_addr, peer_addr) => {
-                    info!(
-                        "Path ({}, {}) failed validation",
-                        local_addr, peer_addr
-                    );
-                },
+                    info!("Path ({}, {}) failed validation", local_addr, peer_addr);
+                }
 
                 core_quic::PathEvent::Closed(local_addr, peer_addr) => {
                     info!(
                         "Path ({}, {}) is now closed and unusable",
                         local_addr, peer_addr
                     );
-                },
+                }
 
-                core_quic::PathEvent::ReusedSourceConnectionId(
-                    cid_seq,
-                    old,
-                    new,
-                ) => {
+                core_quic::PathEvent::ReusedSourceConnectionId(cid_seq, old, new) => {
                     info!(
                         "Peer reused cid seq {} (initially {:?}) on {:?}",
                         cid_seq, old, new
                     );
-                },
+                }
 
                 core_quic::PathEvent::PeerMigrated(..) => unreachable!(),
             }
@@ -495,21 +480,16 @@ pub fn connect(
             scid_sent = true;
         }
 
-        if args.perform_migration &&
-            !new_path_probed &&
-            scid_sent &&
-            conn.available_dcids() > 0
-        {
-            let additional_local_addr =
-                migrate_socket.as_ref().unwrap().local_addr().unwrap();
+        if args.perform_migration && !new_path_probed && scid_sent && conn.available_dcids() > 0 {
+            let additional_local_addr = migrate_socket.as_ref().unwrap().local_addr().unwrap();
             conn.probe_path(additional_local_addr, peer_addr).unwrap();
 
             new_path_probed = true;
         }
 
-        if !probe_path.is_empty() &&
-           *probe_path.first().unwrap() <= app_data_start.elapsed() {
-            conn.poctl(1, &[]).expect("probe-path plugin must be loaded");
+        if !probe_path.is_empty() && *probe_path.first().unwrap() <= app_data_start.elapsed() {
+            conn.poctl(1, &[])
+                .expect("probe-path plugin must be loaded");
             probe_path.remove(0);
         }
 
@@ -525,40 +505,26 @@ pub fn connect(
 
             for peer_addr in conn.paths_iter(local_addr) {
                 loop {
-                    let (write, send_info) = match conn.send_on_path(
-                        &mut out,
-                        Some(local_addr),
-                        Some(peer_addr),
-                    ) {
-                        Ok(v) => v,
+                    let (write, send_info) =
+                        match conn.send_on_path(&mut out, Some(local_addr), Some(peer_addr)) {
+                            Ok(v) => v,
 
-                        Err(core_quic::Error::Done) => {
-                            trace!(
-                                "{} -> {}: done writing",
-                                local_addr,
-                                peer_addr
-                            );
-                            break;
-                        },
+                            Err(core_quic::Error::Done) => {
+                                trace!("{} -> {}: done writing", local_addr, peer_addr);
+                                break;
+                            }
 
-                        Err(e) => {
-                            error!(
-                                "{} -> {}: send failed: {:?}",
-                                local_addr, peer_addr, e
-                            );
+                            Err(e) => {
+                                error!("{} -> {}: send failed: {:?}", local_addr, peer_addr, e);
 
-                            conn.close(false, 0x1, b"fail").ok();
-                            break;
-                        },
-                    };
+                                conn.close(false, 0x1, b"fail").ok();
+                                break;
+                            }
+                        };
 
                     if let Err(e) = socket.send_to(&out[..write], send_info.to) {
                         if e.kind() == std::io::ErrorKind::WouldBlock {
-                            trace!(
-                                "{} -> {}: send() would block",
-                                local_addr,
-                                send_info.to
-                            );
+                            trace!("{} -> {}: send() would block", local_addr, send_info.to);
                             break;
                         }
 
@@ -568,12 +534,7 @@ pub fn connect(
                         )));
                     }
 
-                    trace!(
-                        "{} -> {}: written {}",
-                        local_addr,
-                        send_info.to,
-                        write
-                    );
+                    trace!("{} -> {}: written {}", local_addr, send_info.to, write);
                 }
             }
         }
@@ -586,10 +547,7 @@ pub fn connect(
             );
 
             if !conn.is_established() {
-                error!(
-                    "connection timed out after {:?}",
-                    app_data_start.elapsed(),
-                );
+                error!("connection timed out after {:?}", app_data_start.elapsed(),);
 
                 return Err(ClientError::HandshakeFail);
             }

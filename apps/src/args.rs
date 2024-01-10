@@ -93,8 +93,7 @@ impl Args for CommonArgs {
         let (alpns, dgrams_enabled) = match (http_version, dgram_proto) {
             ("HTTP/0.9", "none") => (alpns::HTTP_09.to_vec(), false),
 
-            ("HTTP/0.9", _) =>
-                panic!("Unsupported HTTP version and DATAGRAM protocol."),
+            ("HTTP/0.9", _) => panic!("Unsupported HTTP version and DATAGRAM protocol."),
 
             ("HTTP/3", "none") => (alpns::HTTP_3.to_vec(), false),
 
@@ -158,40 +157,41 @@ impl Args for CommonArgs {
 
         let enable_active_migration = args.get_bool("--enable-active-migration");
 
-        let max_field_section_size =
-            if args.get_str("--max-field-section-size") != "" {
-                Some(
-                    args.get_str("--max-field-section-size")
-                        .parse::<u64>()
-                        .unwrap(),
-                )
-            } else {
-                None
-            };
+        let max_field_section_size = if args.get_str("--max-field-section-size") != "" {
+            Some(
+                args.get_str("--max-field-section-size")
+                    .parse::<u64>()
+                    .unwrap(),
+            )
+        } else {
+            None
+        };
 
-        let qpack_max_table_capacity =
-            if args.get_str("--qpack-max-table-capacity") != "" {
-                Some(
-                    args.get_str("--qpack-max-table-capacity")
-                        .parse::<u64>()
-                        .unwrap(),
-                )
-            } else {
-                None
-            };
+        let qpack_max_table_capacity = if args.get_str("--qpack-max-table-capacity") != "" {
+            Some(
+                args.get_str("--qpack-max-table-capacity")
+                    .parse::<u64>()
+                    .unwrap(),
+            )
+        } else {
+            None
+        };
 
-        let qpack_blocked_streams =
-            if args.get_str("--qpack-blocked-streams") != "" {
-                Some(
-                    args.get_str("--qpack-blocked-streams")
-                        .parse::<u64>()
-                        .unwrap(),
-                )
-            } else {
-                None
-            };
+        let qpack_blocked_streams = if args.get_str("--qpack-blocked-streams") != "" {
+            Some(
+                args.get_str("--qpack-blocked-streams")
+                    .parse::<u64>()
+                    .unwrap(),
+            )
+        } else {
+            None
+        };
 
-        let plugins = args.get_vec("--plugin").iter_mut().map(|p| p.to_string().into()).collect();
+        let plugins = args
+            .get_vec("--plugin")
+            .iter_mut()
+            .map(|p| p.to_string().into())
+            .collect();
 
         CommonArgs {
             alpns,
