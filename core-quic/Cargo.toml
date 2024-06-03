@@ -17,5 +17,5 @@ boringssl-boring-crate = ["core-quiche/boringssl-boring-crate"]
 sfv = ["core-quiche/sfv"]
 
 [dependencies]
-pluginop = { path = "../../pluginop/lib" }
-core-quiche = { package="quiche", path = "../../core-quiche/quiche" }
+pluginop = "0.1"
+core-quiche = { package="quiche", git = "https://github.com/core-quic/quiche.git" }
